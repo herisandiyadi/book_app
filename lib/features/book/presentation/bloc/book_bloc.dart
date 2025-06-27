@@ -74,27 +74,13 @@ class BookBloc extends Bloc<BookEvent, BookState> {
     Emitter<BookState> emit,
   ) async {
     emit(BookLoading());
-    final result = await getBooks(page: 1);
-    result.fold((failure) => emit(BookError(failure.message)), (books) {
-      List<BookEntity> filteredBooks = books;
-      final query = event.query?.trim().toLowerCase();
-      if (query != null && query.isNotEmpty) {
-        filteredBooks = books.where((book) {
-          final titleMatch = book.title.toLowerCase().contains(query);
-          final authorMatch = book.authors.any(
-            (author) => author.toLowerCase().contains(query),
-          );
-          return titleMatch || authorMatch;
-        }).toList();
-      }
-      emit(
-        BookLoaded(
-          books: filteredBooks,
-          hasReachedMax: filteredBooks.isEmpty,
-          currentPage: 1,
-        ),
-      );
-    });
+    final result = await getBooks(page: 1, query: event.query);
+    result.fold(
+      (failure) => emit(BookError(failure.message)),
+      (books) => emit(
+        BookLoaded(books: books, hasReachedMax: books.isEmpty, currentPage: 1),
+      ),
+    );
   }
 
   Future<void> _onGetBookDetail(
@@ -110,10 +96,11 @@ class BookBloc extends Bloc<BookEvent, BookState> {
   }
 
   Future<void> _onLikeBook(LikeBook event, Emitter<BookState> emit) async {
+    // Update state jika di BookLoaded
     if (state is BookLoaded) {
       final currentState = state as BookLoaded;
       final updatedBooks = currentState.books.map((book) {
-        if (book.id == event.id) {
+        if (book.id == event.book.id) {
           return book.copyWith(isLiked: true);
         }
         return book;
@@ -125,12 +112,9 @@ class BookBloc extends Bloc<BookEvent, BookState> {
           currentPage: currentState.currentPage,
         ),
       );
-      final book = currentState.books.firstWhere(
-        (BookEntity? b) => b?.id == event.id,
-        orElse: () => throw Exception('Book not found'),
-      );
-      await likeBook(book.copyWith(isLiked: true));
     }
+    // Simpan ke DB
+    await likeBook(event.book.copyWith(isLiked: true));
   }
 
   Future<void> _onDislikeBook(
@@ -140,7 +124,7 @@ class BookBloc extends Bloc<BookEvent, BookState> {
     if (state is BookLoaded) {
       final currentState = state as BookLoaded;
       final updatedBooks = currentState.books.map((book) {
-        if (book.id == event.id) {
+        if (book.id == event.book.id) {
           return book.copyWith(isLiked: false);
         }
         return book;
@@ -152,22 +136,14 @@ class BookBloc extends Bloc<BookEvent, BookState> {
           currentPage: currentState.currentPage,
         ),
       );
-      final book = currentState.books.firstWhere(
-        (BookEntity? b) => b?.id == event.id,
-        orElse: () => throw Exception('Book not found'),
-      );
-      await dislikeBook(book.copyWith(isLiked: false));
+      await dislikeBook(event.book.copyWith(isLiked: false));
     } else if (state is LikedBooksLoaded) {
       final currentState = state as LikedBooksLoaded;
       final updatedBooks = currentState.books
-          .where((book) => book.id != event.id)
+          .where((book) => book.id != event.book.id)
           .toList();
       emit(LikedBooksLoaded(updatedBooks));
-      final book = currentState.books.firstWhere(
-        (BookEntity? b) => b?.id == event.id,
-        orElse: () => throw Exception('Book not found'),
-      );
-      await dislikeBook(book.copyWith(isLiked: false));
+      await dislikeBook(event.book.copyWith(isLiked: false));
     }
   }
 

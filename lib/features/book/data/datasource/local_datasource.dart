@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../model/book_model.dart';
+import '../../domain/entities/book_entity.dart';
 
 class BookLocalDataSource {
   static const String _dbName = 'books.db';
@@ -40,7 +41,7 @@ class BookLocalDataSource {
     await db.insert(_tableName, {
       'id': book.id,
       'title': book.title,
-      'authors': book.authors.join(','),
+      'authors': book.authors.map((a) => a.name).join(','),
       'cover_image': book.coverImage,
       'description': book.description,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -59,7 +60,10 @@ class BookLocalDataSource {
       return BookModel(
         id: map['id'] as int,
         title: map['title'] as String,
-        authors: (map['authors'] as String).split(','),
+        authors: (map['authors'] as String)
+            .split(',')
+            .map((name) => AuthorEntity(name: name.trim()))
+            .toList(),
         coverImage: map['cover_image'] as String?,
         description: map['description'] as String?,
       );

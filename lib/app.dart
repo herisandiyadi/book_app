@@ -10,6 +10,7 @@ import 'features/book/presentation/bloc/book_bloc.dart';
 import 'features/book/presentation/bloc/book_event.dart';
 import 'injection/injection.dart';
 import 'package:go_router/go_router.dart';
+import 'core/design_system/theme.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -54,7 +55,7 @@ class App extends StatelessWidget {
       )..add(const FetchBooks()),
       child: MaterialApp.router(
         title: F.title,
-        theme: ThemeData(primarySwatch: Colors.blue),
+        theme: appTheme,
         routerConfig: _router,
       ),
     );

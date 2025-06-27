@@ -27,24 +27,52 @@ class LikedBooksScreen extends StatelessWidget {
                 itemCount: state.books.length,
                 itemBuilder: (context, index) {
                   final book = state.books[index];
-                  return ListTile(
-                    leading: book.coverImage != null
-                        ? Image.network(
-                            book.coverImage!,
-                            width: 50,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          )
-                        : const Icon(Icons.book, size: 50),
-                    title: Text(book.title),
-                    subtitle: Text(book.authors.join(', ')),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      onPressed: () {
-                        context.read<BookBloc>().add(DislikeBook(book.id));
-                      },
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    onTap: () => context.go('/detail/${book.id}'),
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      leading: book.coverImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                book.coverImage!,
+                                width: 50,
+                                height: 70,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.book, size: 50),
+                      title: Text(
+                        book.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        book.authors.join(', '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.favorite, color: Colors.red),
+                        onPressed: () {
+                          context.read<BookBloc>().add(DislikeBook(book));
+                        },
+                      ),
+                      onTap: () => context.go('/detail/${book.id}'),
+                    ),
                   );
                 },
               );

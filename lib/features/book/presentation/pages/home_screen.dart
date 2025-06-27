@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../route_observer.dart';
 
 import '../bloc/book_bloc.dart';
@@ -53,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   void refreshPage() {
     context.read<BookBloc>().add(FetchBooks(page: 1, query: _currentQuery));
+    _searchController.clear();
   }
 
   void _onScroll() {
@@ -96,75 +99,200 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search books...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search books...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onSubmitted: _onSearch,
                 ),
-              ),
-              onSubmitted: _onSearch,
+                const SizedBox(height: 8),
+                // (Filter bar removed)
+              ],
             ),
           ),
           Expanded(
             child: BlocBuilder<BookBloc, BookState>(
               builder: (context, state) {
                 if (state is BookLoading && _currentPage == 1) {
-                  return const Center(child: CircularProgressIndicator());
+                  // Shimmer loading list
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: 6,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: ListTile(
+                            leading: Container(
+                              width: 50,
+                              height: 70,
+                              color: Colors.white,
+                            ),
+                            title: Container(
+                              width: double.infinity,
+                              height: 16,
+                              color: Colors.white,
+                            ),
+                            subtitle: Container(
+                              width: 100,
+                              height: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 } else if (state is BookLoaded) {
                   if (state.books.isEmpty) {
                     return const Center(child: Text('No books found.'));
                   }
                   _currentPage = state.currentPage;
-                  return ListView.builder(
+                  return GridView.builder(
                     controller: _scrollController,
-                    itemCount: state.hasReachedMax
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.62,
+                        ),
+                    itemCount: (state.hasReachedMax || state.books.length == 1)
                         ? state.books.length
                         : state.books.length + 1,
                     itemBuilder: (context, index) {
                       if (index >= state.books.length) {
-                        return const Center(child: CircularProgressIndicator());
+                        // Jangan tampilkan loading widget jika hasil search hanya 1 item
+                        if (state.books.length == 1) {
+                          return const SizedBox.shrink();
+                        }
+                        // Shimmer loading card for infinite scroll
+                        return Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              height: 220,
+                              padding: const EdgeInsets.all(12),
+                            ),
+                          ),
+                        );
                       }
                       final book = state.books[index];
-                      return ListTile(
-                        leading: book.coverImage != null
-                            ? Image.network(
-                                book.coverImage!,
-                                width: 50,
-                                height: 70,
-                                fit: BoxFit.cover,
-                              )
-                            : const Icon(Icons.book, size: 50),
-                        title: Text(book.title),
-                        subtitle: Text(book.authors.join(', ')),
-                        trailing: IconButton(
-                          icon: Icon(
-                            book.isLiked
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: book.isLiked ? Colors.red : null,
-                          ),
-                          onPressed: () {
-                            if (book.isLiked) {
-                              context.read<BookBloc>().add(
-                                DislikeBook(book.id),
-                              );
-                            } else {
-                              context.read<BookBloc>().add(LikeBook(book.id));
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () async {
+                            final result = await context.push(
+                              '/detail/${book.id}',
+                            );
+                            log('BACKDATA $result');
+                            if (!mounted) return;
+                            if (result == true || result == false) {
+                              refreshPage();
                             }
                           },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: book.coverImage != null
+                                        ? CachedNetworkImage(
+                                            imageUrl: book.coverImage!,
+                                            width: 90,
+                                            height: 120,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) =>
+                                                Shimmer.fromColors(
+                                                  baseColor: Colors.grey[300]!,
+                                                  highlightColor:
+                                                      Colors.grey[100]!,
+                                                  child: Container(
+                                                    width: 90,
+                                                    height: 120,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    const Icon(
+                                                      Icons.broken_image,
+                                                      size: 50,
+                                                    ),
+                                          )
+                                        : const Icon(Icons.book, size: 50),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  book.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  book.authors.join(', '),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                const Spacer(),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: IconButton(
+                                    icon: Icon(
+                                      book.isLiked
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: book.isLiked ? Colors.red : null,
+                                    ),
+                                    onPressed: () {
+                                      if (book.isLiked) {
+                                        context.read<BookBloc>().add(
+                                          DislikeBook(book),
+                                        );
+                                      } else {
+                                        context.read<BookBloc>().add(
+                                          LikeBook(book),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        onTap: () async {
-                          final result = await context.push(
-                            '/detail/${book.id}',
-                          );
-                          if (!mounted) return;
-                          if (result == false) {
-                            refreshPage();
-                          }
-                        },
                       );
                     },
                   );

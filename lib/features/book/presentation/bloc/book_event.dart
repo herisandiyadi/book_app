@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/book_entity.dart';
 
 abstract class BookEvent extends Equatable {
   const BookEvent();
@@ -25,6 +26,9 @@ class SearchBooks extends BookEvent {
   final String query;
 
   const SearchBooks(this.query);
+
+  @override
+  List<Object?> get props => [query];
 }
 
 class GetBookDetail extends BookEvent {
@@ -34,15 +38,21 @@ class GetBookDetail extends BookEvent {
 }
 
 class LikeBook extends BookEvent {
-  final int id;
+  final BookEntity book;
 
-  const LikeBook(this.id);
+  const LikeBook(this.book);
+
+  @override
+  List<Object?> get props => [book];
 }
 
 class DislikeBook extends BookEvent {
-  final int id;
+  final BookEntity book;
 
-  const DislikeBook(this.id);
+  const DislikeBook(this.book);
+
+  @override
+  List<Object?> get props => [book];
 }
 
 class FetchLikedBooks extends BookEvent {}

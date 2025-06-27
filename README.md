@@ -1,144 +1,104 @@
 # Palm Book App
 
-Palm Book App is a Flutter application for browsing, searching, and managing a collection of books. Users can view book details, like/unlike books, and see their liked books. The app is built with clean architecture principles, supports multiple environments (dev, staging, production), and uses BLoC for state management and GoRouter for navigation.
+A modern Flutter app for browsing, searching, and managing books using the Gutendex API, with local like/dislike functionality and a clean design system.
 
 ## Features
 
-- Browse a paginated list of books with cover images and authors
-- Search books by title or author
-- View detailed information for each book
-- Like or unlike books, with persistence
-- View a list of liked books
-- Responsive UI with loading and error states
-- Environment-based configuration (dev, staging, production)
-- Clean architecture: separation of data, domain, and presentation layers
+- Browse books in a responsive grid with cover images and details.
+- Search books by title or author.
+- Filter and sort books (by popularity, etc).
+- View detailed book information, including:
+  - Title, authors (with birth/death year)
+  - Summaries, description, subjects, bookshelves, languages
+  - Copyright, media type, formats (with download links), download count
+- Like/unlike books, with persistent local storage (sqflite).
+- View and manage your liked books.
+- Consistent design system with custom color palette and Poppins font.
+- Shimmer loading indicators for smooth UX.
+- Full support for mobile and desktop Flutter.
 
-## Project Structure
+## Architecture
 
-```
-lib/
-├── app.dart                # App root, GoRouter setup, BLoC provider
-├── main.dart               # Main entry (default)
-├── main_dev.dart           # Entry for dev flavor
-├── main_staging.dart       # Entry for staging flavor
-├── main_production.dart    # Entry for production flavor
-├── flavors.dart            # Flavor enum and config
-├── features/
-│   └── book/
-│       ├── data/           # Data sources, models, repository implementation
-│       ├── domain/         # Entities, repository interface, use cases
-│       └── presentation/   # BLoC, UI pages, widgets
-├── injection/              # Dependency injection setup
-├── route_observer.dart     # (Legacy) Route observer
-```
+- **Presentation**: Bloc pattern for state management, GoRouter for navigation, modular widgets.
+- **Domain**: Usecases for business logic, entities for data structure.
+- **Data**: Repository pattern, remote datasource (Gutendex API), local datasource (sqflite).
+- **Dependency Injection**: get_it for service locator.
 
-## Key Dependencies
+## Setup
 
-- [flutter_bloc](https://pub.dev/packages/flutter_bloc) - State management
-- [go_router](https://pub.dev/packages/go_router) - Declarative routing
-- [freezed](https://pub.dev/packages/freezed) - Data classes and unions
-- [get_it](https://pub.dev/packages/get_it) - Dependency injection
-- [dartz](https://pub.dev/packages/dartz) - Functional programming utilities
-- [sqflite](https://pub.dev/packages/sqflite) - Local persistence for liked books
-- [flutter_dotenv](https://pub.dev/packages/flutter_dotenv) - Environment variables
-
-## Getting Started
-
-### Prerequisites
-
-- [Flutter SDK](https://flutter.dev/docs/get-started/install)
-- Dart 3.8.1 or higher
-
-### Setup
-
-1. **Clone the repository:**
+1. **Clone the repo**
    ```sh
-   git clone <repo-url>
+   git clone https://github.com/yourusername/palm_book_app.git
    cd palm_book_app
    ```
 
-2. **Install dependencies:**
+2. **Install dependencies**
    ```sh
    flutter pub get
    ```
 
-3. **Environment files:**
-   - The app uses environment files for configuration. Example files:
-     - `.env`
-     - `dev.env`
-     - `staging.env`
-     - `production.env`
-   - Make sure `production.env` is included in the `pubspec.yaml` assets:
-     ```yaml
-     flutter:
-       assets:
-         - production.env
+3. **Setup environment**
+   - Copy `.env.example` to `.env` and set `API_BASE_URL` (default: `https://gutendex.com/books`)
+   - Example:
      ```
-   - You can add API keys or other config in these files.
+     API_BASE_URL=https://gutendex.com/books
+     ```
 
-4. **iOS/Android setup:**
-   - For iOS, run `pod install` in the `ios/` directory if needed.
-   - For Android, no extra steps are required.
+4. **Generate code (Freezed, JsonSerializable)**
+   ```sh
+   flutter pub run build_runner build --delete-conflicting-outputs
+   ```
 
-### Running the App
+5. **Run the app**
+   ```sh
+   flutter run
+   ```
 
-#### Default (dev) environment
+## Testing
 
-```sh
-flutter run -t lib/main_dev.dart
-```
-
-#### Staging environment
-
-```sh
-flutter run -t lib/main_staging.dart
-```
-
-#### Production environment
-
-```sh
-flutter run -t lib/main_production.dart
-```
-
-You can also use your IDE's Flutter run configuration and select the appropriate entrypoint.
-
-### Building for Release
-
-- **Android:**
+- **Unit tests** for repository, datasource, usecase, and model mapping.
+- **Widget tests** for main screens and Bloc.
+- **Run all tests:**
   ```sh
-  flutter build apk -t lib/main_production.dart
-  ```
-- **iOS:**
-  ```sh
-  flutter build ios -t lib/main_production.dart
+  flutter test
   ```
 
-## Environment Variables
+## Tech Stack
 
-- Place your environment variables in the appropriate `.env` file.
-- Example (`production.env`):
-  ```
-  API_URL=https://api.example.com
-  ```
+- Flutter 3.x
+- flutter_bloc, freezed, json_serializable, sqflite, get_it, go_router, google_fonts, shimmer, cached_network_image, mockito
 
-## Architecture
+## API
 
-- **Presentation Layer:** UI widgets, pages, and BLoC for state management.
-- **Domain Layer:** Entities, repository interfaces, and use cases.
-- **Data Layer:** Repository implementations, data sources (remote/local), and models.
-- **Navigation:** GoRouter with declarative route definitions.
-- **State Management:** BLoC pattern with flutter_bloc.
+- [Gutendex API](https://gutendex.com/)
+- Supports all major fields: id, title, authors, summaries, subjects, bookshelves, languages, copyright, media_type, formats, download_count.
 
-## How Liking/Unliking Works
+## Folder Structure
 
-- Liked books are persisted locally using `sqflite`.
-- The like status is merged with remote data on every fetch.
-- Liking/unliking a book in the detail or home screen updates the local data and is reflected in the UI after refresh.
-
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements or bug fixes.
+```
+lib/
+  core/
+    design_system/
+  features/
+    book/
+      data/
+        datasource/
+        model/
+        repository/
+      domain/
+        entities/
+        repository/
+        usecases/
+      presentation/
+        bloc/
+        pages/
+test/
+  unit_test/
+    book_repository_impl_test.dart
+    book_remote_datasource_test.dart
+  widget_test.dart
+```
 
 ## License
 
-This project is licensed under the MIT License.
+MIT

@@ -9,9 +9,18 @@ class BookModel with _$BookModel {
   const factory BookModel({
     required int id,
     required String title,
-    @Default([]) List<String> authors,
+    @Default([]) List<AuthorEntity> authors,
     @JsonKey(name: 'cover_image') String? coverImage,
     String? description,
+    List<String>? summaries,
+    List<String>? translators,
+    List<String>? subjects,
+    List<String>? bookshelves,
+    List<String>? languages,
+    bool? copyright,
+    String? mediaType,
+    Map<String, String>? formats,
+    int? downloadCount,
   }) = _BookModel;
 
   factory BookModel.fromJson(Map<String, dynamic> json) =>
@@ -26,6 +35,15 @@ extension BookModelMapper on BookModel {
     authors: authors,
     coverImage: coverImage,
     description: description,
+    summaries: summaries,
+    translators: translators,
+    subjects: subjects,
+    bookshelves: bookshelves,
+    languages: languages,
+    copyright: copyright,
+    mediaType: mediaType,
+    formats: formats,
+    downloadCount: downloadCount,
     isLiked: isLiked,
   );
   static BookModel fromEntity(BookEntity entity) => BookModel(
@@ -34,5 +52,14 @@ extension BookModelMapper on BookModel {
     authors: entity.authors,
     coverImage: entity.coverImage,
     description: entity.description,
+    summaries: entity.summaries,
+    translators: entity.translators,
+    subjects: entity.subjects,
+    bookshelves: entity.bookshelves,
+    languages: entity.languages,
+    copyright: entity.copyright,
+    mediaType: entity.mediaType,
+    formats: entity.formats,
+    downloadCount: entity.downloadCount,
   );
 }
