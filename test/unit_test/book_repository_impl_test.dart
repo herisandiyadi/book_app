@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
 import 'package:palm_book_app/features/book/data/repository/book_repository_impl.dart';
 import 'package:palm_book_app/features/book/data/model/book_model.dart';
@@ -12,6 +12,8 @@ class MockRemoteDataSource extends Mock implements BookRemoteDataSource {}
 class MockLocalDataSource extends Mock implements BookLocalDataSource {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late BookRepositoryImpl repository;
   late MockRemoteDataSource mockRemote;
   late MockLocalDataSource mockLocal;
@@ -25,6 +27,18 @@ void main() {
     );
   });
 
+  setUpAll(() {
+    registerFallbackValue(
+      BookModel(
+        id: 0,
+        title: 'dummy',
+        authors: [AuthorEntity(name: 'dummy')],
+        coverImage: 'dummy',
+        description: 'dummy',
+      ),
+    );
+  });
+
   test('getBooks returns list of BookEntity with isLiked info', () async {
     final bookModel = BookModel(
       id: 1,
@@ -34,9 +48,9 @@ void main() {
       description: 'desc',
     );
     when(
-      mockRemote.fetchBooks(page: 1, query: null),
+      () => mockRemote.fetchBooks(page: 1, query: null),
     ).thenAnswer((_) async => [bookModel]);
-    when(mockLocal.getLikedBooks()).thenAnswer((_) async => []);
+    when(() => mockLocal.getLikedBooks()).thenAnswer((_) async => []);
 
     final result = await repository.getBooks(page: 1);
 
@@ -57,11 +71,11 @@ void main() {
       description: 'desc',
       isLiked: true,
     );
-    when(mockLocal.likeBook(any)).thenAnswer((_) async => null);
+    when(() => mockLocal.likeBook(any())).thenAnswer((_) async {});
 
     final result = await repository.likeBook(book);
 
     expect(result.isRight(), true);
-    verify(mockLocal.likeBook(any)).called(1);
+    verify(() => mockLocal.likeBook(any())).called(1);
   });
 }

@@ -7,24 +7,76 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:palm_book_app/main.dart';
+import 'package:palm_book_app/app.dart';
+import 'package:palm_book_app/flavors.dart';
+import 'package:palm_book_app/injection/injection.dart';
+import 'package:palm_book_app/features/book/data/datasource/remote_datasource.dart';
+import 'package:palm_book_app/features/book/presentation/pages/home_screen.dart';
+import 'package:palm_book_app/features/book/presentation/pages/book_detail_screen.dart';
+import 'package:palm_book_app/features/book/presentation/pages/liked_books_screen.dart';
+import 'package:palm_book_app/features/book/presentation/bloc/book_bloc.dart';
+
+class MockBookRemoteDataSource extends Mock implements BookRemoteDataSource {}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const PalmBookApp());
+  setUpAll(() async {
+    F.appFlavor = Flavor.dev;
+    await init();
+    // Unregister and register mock for BookRemoteDataSource to avoid dotenv dependency
+    sl.unregister<BookRemoteDataSource>();
+    sl.registerLazySingleton<BookRemoteDataSource>(
+      () => MockBookRemoteDataSource(),
+    );
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('App can be pumped without error', (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+    expect(find.byType(App), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('HomeScreen can be pumped without error', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<BookBloc>(
+          create: (_) => sl<BookBloc>(),
+          child: HomeScreen(),
+        ),
+      ),
+    );
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('BookDetailScreen can be pumped without error', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<BookBloc>(
+          create: (_) => sl<BookBloc>(),
+          child: BookDetailScreen(bookId: 1),
+        ),
+      ),
+    );
+    expect(find.byType(BookDetailScreen), findsOneWidget);
+  });
+
+  testWidgets('LikedBooksScreen can be pumped without error', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<BookBloc>(
+          create: (_) => sl<BookBloc>(),
+          child: LikedBooksScreen(),
+        ),
+      ),
+    );
+    expect(find.byType(LikedBooksScreen), findsOneWidget);
   });
 }

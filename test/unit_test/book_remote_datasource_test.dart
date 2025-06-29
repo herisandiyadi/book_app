@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:http/http.dart' as http;
 import 'package:palm_book_app/features/book/data/datasource/remote_datasource.dart';
 import 'package:palm_book_app/features/book/data/model/book_model.dart';
@@ -10,6 +10,10 @@ class MockHttpClient extends Mock implements http.Client {}
 void main() {
   late BookRemoteDataSource dataSource;
   late MockHttpClient mockHttp;
+
+  setUpAll(() {
+    registerFallbackValue(Uri());
+  });
 
   setUp(() {
     mockHttp = MockHttpClient();
@@ -34,7 +38,7 @@ void main() {
       ],
     };
     when(
-      mockHttp.get(any as Uri),
+      () => mockHttp.get(any()),
     ).thenAnswer((_) async => http.Response(jsonEncode(responseJson), 200));
 
     final books = await dataSource.fetchBooks(page: 1);
