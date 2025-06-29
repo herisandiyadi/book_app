@@ -1,90 +1,205 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Color palette
-const Color kDarkMossGreen = Color(0xFF606C38);
-const Color kPakistanGreen = Color(0xFF283618);
-const Color kCornsilk = Color(0xFFFEFAE0);
-const Color kEarthYellow = Color(0xFFDDA15E);
-const Color kTigersEye = Color(0xFFBC6C25);
+/// Futuristic Color palette
+const Color kNeonBlue = Color(0xFF00FFF7);
+const Color kDeepNavy = Color(0xFF0A0F2C);
+const Color kElectricPurple = Color(0xFF9D00FF);
+const Color kCharcoal = Color(0xFF181A2A);
+const Color kNeonMagenta = Color(0xFFFF005C);
 
-/// App ColorScheme
-const ColorScheme appColorScheme = ColorScheme(
-  brightness: Brightness.light,
-  primary: kDarkMossGreen,
-  onPrimary: kCornsilk,
-  secondary: kEarthYellow,
-  onSecondary: kPakistanGreen,
-  background: kCornsilk,
-  onBackground: kPakistanGreen,
-  surface: Colors.white,
-  onSurface: kPakistanGreen,
-  error: kTigersEye,
+/// App ColorScheme (Dark)
+const ColorScheme appColorSchemeDark = ColorScheme(
+  brightness: Brightness.dark,
+  primary: kNeonBlue,
+  onPrimary: kDeepNavy,
+  secondary: kElectricPurple,
+  onSecondary: kNeonBlue,
+  background: kDeepNavy,
+  onBackground: kNeonBlue,
+  surface: kCharcoal,
+  onSurface: kNeonBlue,
+  error: kNeonMagenta,
   onError: Colors.white,
 );
 
-/// App ThemeData
-final ThemeData appTheme = ThemeData(
-  colorScheme: appColorScheme,
-  scaffoldBackgroundColor: appColorScheme.background,
+/// App ColorScheme (Light)
+const ColorScheme appColorSchemeLight = ColorScheme(
+  brightness: Brightness.light,
+  primary: kElectricPurple,
+  onPrimary: Colors.white,
+  secondary: kNeonBlue,
+  onSecondary: kDeepNavy,
+  background: Colors.white,
+  onBackground: kDeepNavy,
+  surface: Color(0xFFF2F6FF),
+  onSurface: kDeepNavy,
+  error: kNeonMagenta,
+  onError: Colors.white,
+);
+
+/// App ThemeData (Dark)
+final ThemeData appThemeDark = ThemeData(
+  colorScheme: appColorSchemeDark,
+  scaffoldBackgroundColor: appColorSchemeDark.background,
   fontFamily: GoogleFonts.poppins().fontFamily,
-  textTheme: GoogleFonts.poppinsTextTheme(),
+  textTheme: GoogleFonts.poppinsTextTheme().apply(
+    bodyColor: kNeonBlue,
+    displayColor: kNeonBlue,
+  ),
   appBarTheme: AppBarTheme(
-    backgroundColor: kDarkMossGreen,
-    foregroundColor: kCornsilk,
+    backgroundColor: kCharcoal,
+    foregroundColor: kNeonBlue,
     elevation: 0,
-    iconTheme: const IconThemeData(color: kCornsilk),
+    iconTheme: const IconThemeData(color: kNeonBlue),
     titleTextStyle: const TextStyle(
-      color: kCornsilk,
+      color: kNeonBlue,
       fontWeight: FontWeight.bold,
       fontSize: 20,
+      letterSpacing: 1.2,
+      shadows: [
+        Shadow(color: kElectricPurple, blurRadius: 8, offset: Offset(0, 2)),
+      ],
     ),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: kEarthYellow,
-    foregroundColor: kPakistanGreen,
+    backgroundColor: kElectricPurple,
+    foregroundColor: kNeonBlue,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: kDarkMossGreen,
-      foregroundColor: kCornsilk,
+      backgroundColor: kNeonBlue,
+      foregroundColor: kDeepNavy,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
-      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.1,
+        shadows: [
+          Shadow(color: kElectricPurple, blurRadius: 6, offset: Offset(0, 1)),
+        ],
+      ),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: kDarkMossGreen,
-      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      foregroundColor: kElectricPurple,
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.1,
+      ),
     ),
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: kCornsilk,
+    fillColor: kCharcoal,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: kDarkMossGreen),
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: kNeonBlue),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: kEarthYellow, width: 2),
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: kElectricPurple, width: 2),
     ),
-    labelStyle: const TextStyle(color: kPakistanGreen),
-    hintStyle: const TextStyle(color: kPakistanGreen),
+    labelStyle: const TextStyle(color: kNeonBlue),
+    hintStyle: const TextStyle(color: kElectricPurple),
   ),
-  iconTheme: const IconThemeData(color: kDarkMossGreen),
-  progressIndicatorTheme: const ProgressIndicatorThemeData(color: kEarthYellow),
+  iconTheme: const IconThemeData(color: kNeonBlue),
+  progressIndicatorTheme: const ProgressIndicatorThemeData(
+    color: kElectricPurple,
+  ),
   snackBarTheme: const SnackBarThemeData(
-    backgroundColor: kTigersEye,
-    contentTextStyle: TextStyle(color: kCornsilk),
+    backgroundColor: kNeonMagenta,
+    contentTextStyle: TextStyle(color: kNeonBlue),
   ),
   cardTheme: CardThemeData(
-    color: Colors.white,
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: kCharcoal,
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    shadowColor: kElectricPurple.withOpacity(0.2),
   ),
-  dividerColor: kEarthYellow,
+  dividerColor: kElectricPurple,
+  useMaterial3: true,
+);
+
+/// App ThemeData (Light)
+final ThemeData appThemeLight = ThemeData(
+  colorScheme: appColorSchemeLight,
+  scaffoldBackgroundColor: appColorSchemeLight.background,
+  fontFamily: GoogleFonts.poppins().fontFamily,
+  textTheme: GoogleFonts.poppinsTextTheme().apply(
+    bodyColor: kDeepNavy,
+    displayColor: kDeepNavy,
+  ),
+  appBarTheme: AppBarTheme(
+    backgroundColor: appColorSchemeLight.primary,
+    foregroundColor: Colors.white,
+    elevation: 0,
+    iconTheme: const IconThemeData(color: Colors.white),
+    titleTextStyle: const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+      letterSpacing: 1.2,
+      shadows: [Shadow(color: kNeonBlue, blurRadius: 8, offset: Offset(0, 2))],
+    ),
+  ),
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: kNeonBlue,
+    foregroundColor: kDeepNavy,
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: kElectricPurple,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.1,
+        shadows: [
+          Shadow(color: kNeonBlue, blurRadius: 6, offset: Offset(0, 1)),
+        ],
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: kNeonBlue,
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.1,
+      ),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: appColorSchemeLight.surface,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: kElectricPurple),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: kNeonBlue, width: 2),
+    ),
+    labelStyle: const TextStyle(color: kDeepNavy),
+    hintStyle: const TextStyle(color: kElectricPurple),
+  ),
+  iconTheme: const IconThemeData(color: kElectricPurple),
+  progressIndicatorTheme: const ProgressIndicatorThemeData(color: kNeonBlue),
+  snackBarTheme: const SnackBarThemeData(
+    backgroundColor: kNeonMagenta,
+    contentTextStyle: TextStyle(color: kDeepNavy),
+  ),
+  cardTheme: CardThemeData(
+    color: appColorSchemeLight.surface,
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    shadowColor: kNeonBlue.withOpacity(0.12),
+  ),
+  dividerColor: kNeonBlue,
   useMaterial3: true,
 );

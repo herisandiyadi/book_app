@@ -125,20 +125,49 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 _lastBookId = book.id;
               }
               return Scaffold(
+                extendBodyBehindAppBar: true,
                 appBar: AppBar(
-                  title: Text(_localBook.title),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  iconTheme: IconThemeData(),
+
+                  title: ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return const LinearGradient(
+                        colors: [Color(0xFF00FFF7), Color(0xFF9D00FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds);
+                    },
+                    child: Text(
+                      _localBook.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
                   actions: [
-                    // BlocBuilder hanya untuk icon favorite
                     ValueListenableBuilder<bool>(
                       valueListenable: _isLikedNotifier!,
                       builder: (context, isLiked, _) {
                         return IconButton(
                           icon: Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : null,
+                            color: isLiked
+                                ? const Color(0xFFFF005C)
+                                : const Color(0xFF00FFF7),
+                            shadows: [
+                              Shadow(
+                                color: Color(0xFF9D00FF),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
                           onPressed: () {
-                            // Update ValueNotifier secara lokal agar icon langsung berubah
                             _isLikedNotifier?.value = !isLiked;
                             if (isLiked) {
                               context.read<BookBloc>().add(
@@ -158,7 +187,22 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     ),
                   ],
                 ),
-                body: _BookDetailContent(book: _localBook),
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: Theme.of(context).brightness == Brightness.dark
+                        ? const LinearGradient(
+                            colors: [Color(0xFF0A0F2C), Color(0xFF9D00FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : const LinearGradient(
+                            colors: [Color(0xFFF2F6FF), Color(0xFF00FFF7)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                  ),
+                  child: _BookDetailContent(book: _localBook),
+                ),
               );
             } else if (state is BookError) {
               return Scaffold(
@@ -183,9 +227,23 @@ class _BookDetailContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.98),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.18),
+              blurRadius: 24,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: Theme.of(context).colorScheme.secondary,
+            width: 2,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: ListView(
@@ -193,28 +251,55 @@ class _BookDetailContent extends StatelessWidget {
             children: [
               if (book.coverImage != null)
                 Center(
-                  child: CachedNetworkImage(
-                    imageUrl: book.coverImage!,
-                    width: 150,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      child: Container(
-                        width: 150,
-                        height: 200,
-                        color: Colors.white,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00FFF7).withOpacity(0.3),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: book.coverImage!,
+                      width: 150,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Theme.of(context).colorScheme.surface,
+                        highlightColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.3),
+                        child: Container(
+                          width: 150,
+                          height: 200,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.broken_image,
+                        size: 150,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.broken_image, size: 150),
                   ),
                 ),
               const SizedBox(height: 16),
               Text(
                 book.title,
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Theme.of(context).colorScheme.secondary,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -233,7 +318,9 @@ class _BookDetailContent extends StatelessWidget {
                         '${a.name}'
                         '${a.birthYear != null ? ' (b. ${a.birthYear})' : ''}'
                         '${a.deathYear != null ? ' - d. ${a.deathYear}' : ''}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -283,9 +370,15 @@ class _BookDetailContent extends StatelessWidget {
                   children: book.subjects!
                       .map(
                         (s) => Chip(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
                           label: Text(
                             s,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ),
                       )
@@ -305,9 +398,15 @@ class _BookDetailContent extends StatelessWidget {
                   children: book.bookshelves!
                       .map(
                         (s) => Chip(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
                           label: Text(
                             s,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ),
                       )
@@ -327,9 +426,15 @@ class _BookDetailContent extends StatelessWidget {
                   children: book.languages!
                       .map(
                         (l) => Chip(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
                           label: Text(
                             l,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ),
                       )

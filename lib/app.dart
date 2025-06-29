@@ -12,6 +12,26 @@ import 'injection/injection.dart';
 import 'package:go_router/go_router.dart';
 import 'core/design_system/theme.dart';
 
+/// ThemeSwitcher for toggling light/dark mode
+class ThemeSwitcher extends InheritedWidget {
+  final ValueNotifier<ThemeMode> themeMode;
+
+  ThemeSwitcher({Key? key, required Widget child})
+    : themeMode = ValueNotifier(ThemeMode.dark),
+      super(key: key, child: child);
+
+  static ThemeSwitcher of(BuildContext context) {
+    final ThemeSwitcher? result = context
+        .dependOnInheritedWidgetOfExactType<ThemeSwitcher>();
+    assert(result != null, 'No ThemeSwitcher found in context');
+    return result!;
+  }
+
+  @override
+  bool updateShouldNotify(ThemeSwitcher oldWidget) =>
+      themeMode != oldWidget.themeMode;
+}
+
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -53,10 +73,25 @@ class App extends StatelessWidget {
         dislikeBook: sl(),
         getLikedBooks: sl(),
       )..add(const FetchBooks()),
-      child: MaterialApp.router(
-        title: F.title,
-        theme: appTheme,
-        routerConfig: _router,
+      child: ThemeSwitcher(
+        child: Builder(
+          builder: (context) {
+            final themeMode = ThemeSwitcher.of(context).themeMode;
+            return ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeMode,
+              builder: (context, mode, _) {
+                return MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: F.title,
+                  theme: appThemeLight,
+                  darkTheme: appThemeDark,
+                  themeMode: mode,
+                  routerConfig: _router,
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
