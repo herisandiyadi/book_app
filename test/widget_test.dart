@@ -1,82 +1,109 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// ignore_for_file: prefer_const_constructors, avoid_redundant_argument_values
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
-import 'package:palm_book_app/main.dart';
-import 'package:palm_book_app/app.dart';
-import 'package:palm_book_app/flavors.dart';
-import 'package:palm_book_app/injection/injection.dart';
-import 'package:palm_book_app/features/book/data/datasource/remote_datasource.dart';
 import 'package:palm_book_app/features/book/presentation/pages/home_screen.dart';
-import 'package:palm_book_app/features/book/presentation/pages/book_detail_screen.dart';
-import 'package:palm_book_app/features/book/presentation/pages/liked_books_screen.dart';
 import 'package:palm_book_app/features/book/presentation/bloc/book_bloc.dart';
+import 'package:palm_book_app/features/book/presentation/bloc/book_event.dart';
+import 'package:palm_book_app/features/book/presentation/bloc/book_state.dart';
+import 'package:palm_book_app/features/book/domain/entities/book_entity.dart';
+import 'package:palm_book_app/app.dart';
 
-class MockBookRemoteDataSource extends Mock implements BookRemoteDataSource {}
+class MockBookBloc extends Mock implements BookBloc {}
+
+class FakeBookEvent extends Fake implements BookEvent {}
+
+class FakeBookState extends Fake implements BookState {}
 
 void main() {
-  setUpAll(() async {
-    F.appFlavor = Flavor.dev;
-    await init();
-    // Unregister and register mock for BookRemoteDataSource to avoid dotenv dependency
-    sl.unregister<BookRemoteDataSource>();
-    sl.registerLazySingleton<BookRemoteDataSource>(
-      () => MockBookRemoteDataSource(),
-    );
+  setUpAll(() {
+    registerFallbackValue(FakeBookEvent());
+    registerFallbackValue(FakeBookState());
   });
 
-  testWidgets('App can be pumped without error', (WidgetTester tester) async {
-    await tester.pumpWidget(const App());
-    expect(find.byType(App), findsOneWidget);
+  late MockBookBloc mockBookBloc;
+
+  setUp(() {
+    mockBookBloc = MockBookBloc();
+    // Mock stream agar tidak null
+    when(
+      () => mockBookBloc.stream,
+    ).thenAnswer((_) => const Stream<BookState>.empty());
+    // Mock add agar bisa diverify
+    when(() => mockBookBloc.add(any())).thenReturn(null);
   });
 
-  testWidgets('HomeScreen can be pumped without error', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<BookBloc>(
-          create: (_) => sl<BookBloc>(),
-          child: HomeScreen(),
-        ),
+  Widget makeTestableWidget(Widget child) {
+    return ThemeSwitcher(
+      child: MaterialApp(
+        home: BlocProvider<BookBloc>.value(value: mockBookBloc, child: child),
       ),
     );
-    expect(find.byType(HomeScreen), findsOneWidget);
+  }
+
+  testWidgets('Menampilkan shimmer loading saat BookLoading', (tester) async {
+    when(() => mockBookBloc.state).thenReturn(BookLoading());
+    await tester.pumpWidget(makeTestableWidget(HomeScreen()));
+    expect(find.byType(Shimmer), findsWidgets);
   });
 
-  testWidgets('BookDetailScreen can be pumped without error', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<BookBloc>(
-          create: (_) => sl<BookBloc>(),
-          child: BookDetailScreen(bookId: 1),
-        ),
+  testWidgets('Menampilkan grid buku saat BookLoaded', (tester) async {
+    final books = [
+      BookEntity(
+        id: 1,
+        title: 'Buku Satu',
+        authors: [AuthorEntity(name: 'Penulis A')],
+        coverImage: null,
+        isLiked: false,
       ),
-    );
-    expect(find.byType(BookDetailScreen), findsOneWidget);
+      BookEntity(
+        id: 2,
+        title: 'Buku Dua',
+        authors: [AuthorEntity(name: 'Penulis B')],
+        coverImage: null,
+        isLiked: true,
+      ),
+    ];
+    when(
+      () => mockBookBloc.state,
+    ).thenReturn(BookLoaded(books: books, hasReachedMax: true, currentPage: 1));
+    await tester.pumpWidget(makeTestableWidget(HomeScreen()));
+    expect(find.text('Buku Satu'), findsOneWidget);
+    expect(find.text('Buku Dua'), findsOneWidget);
+    // Ikon favorite di AppBar dan di card buku, jadi harus ada 2
+    expect(find.byIcon(Icons.favorite), findsNWidgets(2));
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
   });
 
-  testWidgets('LikedBooksScreen can be pumped without error', (
-    WidgetTester tester,
+  testWidgets('Menampilkan pesan "No books found." jika data kosong', (
+    tester,
   ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<BookBloc>(
-          create: (_) => sl<BookBloc>(),
-          child: LikedBooksScreen(),
-        ),
-      ),
-    );
-    expect(find.byType(LikedBooksScreen), findsOneWidget);
+    when(
+      () => mockBookBloc.state,
+    ).thenReturn(BookLoaded(books: [], hasReachedMax: true, currentPage: 1));
+    await tester.pumpWidget(makeTestableWidget(HomeScreen()));
+    expect(find.text('No books found.'), findsOneWidget);
+  });
+
+  testWidgets('Menampilkan pesan error saat BookError', (tester) async {
+    when(() => mockBookBloc.state).thenReturn(BookError('Gagal memuat data'));
+    await tester.pumpWidget(makeTestableWidget(HomeScreen()));
+    expect(find.textContaining('Gagal memuat data'), findsOneWidget);
+  });
+
+  testWidgets('Mengirim event SearchBooks saat search', (tester) async {
+    when(
+      () => mockBookBloc.state,
+    ).thenReturn(BookLoaded(books: [], hasReachedMax: true, currentPage: 1));
+    await tester.pumpWidget(makeTestableWidget(HomeScreen()));
+    final searchField = find.byType(TextField);
+    expect(searchField, findsOneWidget);
+    await tester.enterText(searchField, 'flutter');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    verify(() => mockBookBloc.add(SearchBooks('flutter'))).called(1);
   });
 }
